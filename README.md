@@ -5,9 +5,9 @@ Repository for simulations and illustrations for "Causal Structure Learning for 
 ## Implementation of CAT
 Implementation of CAT is found in "Functions.R". The CAT estimate is computed by running:
 
-CAT(data,noise,workers,numbasisfnct = NULL)
+CAT(data, noise, workers, numbasisfnct = NULL)
 
-where data is the datamatrix (rowwise observations, columnwise nodes), noise =="G" uses the Gaussian score and noise =="NA" uses the entropy score, workers sets the number of threads to run the CAT method on, and numbasisfnct sets the number of basisfunctions for the GAM spline estimation of the conditional means.
+where data is the datamatrix (rowwise observations, columnwise nodes), noise = "G" uses the Gaussian score and noise = "NA" uses the entropy score, workers sets the number of threads to run the CAT method on, and numbasisfnct sets the number of basisfunctions for the GAM spline estimation of the conditional means.
 
 ## Replicate experiments
 
