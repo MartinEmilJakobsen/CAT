@@ -1,5 +1,5 @@
 # Causal Structure Learning for Directed Trees
-Repository for simulations and illustrations for "Causal Structure Learning for Directed Trees" @ https://arxiv.org/abs/???????. 
+Repository for simulations and illustrations for "Causal Structure Learning for Directed Trees" @ https://arxiv.org/abs/2108.08871. 
 
 
 ## Implementation of CAT
