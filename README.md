@@ -1,8 +1,8 @@
-# Structure Learning for Directed Trees  {.tabset}
-Repository for implementations, simulations and illustrations for "Structure Learning for Directed Trees" @ https://arxiv.org/abs/2108.08871. 
+# Structure Learning for Directed Trees
+Repository for the paper "Structure Learning for Directed Trees" @ https://arxiv.org/abs/2108.08871. 
 
 
-## Implementation of CAT 
+## Implementation of Causal additive trees (CAT)
 
 The function `CAT` estimates a minimum edge weight directed tree using either a Gaussian or Entropy score function.
 See the paper https://arxiv.org/abs/2108.08871 for further details.
@@ -116,8 +116,14 @@ If you want to replicate all experiments then start from step 1) and do not igno
 
 
 ### Requirements
-To run all our experiments and analysis script run the following code chunk to install the R-package dependencies that are needed.
+To run all our experiments and analysis scripts you need to have both Python3 (only needed for hypothesis testing exp.) and R installed.
 
+Python3 needs to have the access to networkx library.
+Run the following command in your terminal
+```bash
+pip install networkx
+```
+Furthermore, run the following code chunk to install the R-package dependencies that are needed.
 ```R
 install.packages("pacman")
 pacman::p_load(tidyverse,facetscales,stringr,ggpubr,igraph,gridExtra,DescTools,IndepTest,mgcv,furrr,RBGL,pcalg,SID,Matrix,readxl,xtable,latex2exp,glmnet,mboost,kableExtra,Rcpp,devtools)
@@ -130,7 +136,7 @@ devtools::install_github('rlebron-bioinfo/gnlearn')
 ### 1) Data generation 
 
 
-To generate the experiment data: Run Script.R or manually run the following scripts. 
+To generate the experiment data: run the following scripts. 
 
 1. **CAMvsTree_GP_Gaussian.R**
     * *This script runs the Gaussian Process Gaussian Noise Experiment*

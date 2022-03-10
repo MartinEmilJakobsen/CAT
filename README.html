@@ -167,11 +167,11 @@ pre code {
 </div>
 
 
-<div id="structure-learning-for-directed-trees" class="section level1 tabset">
-<h1 class="tabset">Structure Learning for Directed Trees</h1>
-<p>Repository for implementations, simulations and illustrations for “Structure Learning for Directed Trees” @ <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a>.</p>
-<div id="implementation-of-cat" class="section level2">
-<h2>Implementation of CAT</h2>
+<div id="structure-learning-for-directed-trees" class="section level1">
+<h1>Structure Learning for Directed Trees</h1>
+<p>Repository for the paper “Structure Learning for Directed Trees” @ <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a>.</p>
+<div id="implementation-of-causal-additive-trees-cat" class="section level2">
+<h2>Implementation of Causal additive trees (CAT)</h2>
 <p>The function <code>CAT</code> estimates a minimum edge weight directed tree using either a Gaussian or Entropy score function. See the paper <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a> for further details.</p>
 <div id="requirements" class="section level3">
 <h3>Requirements</h3>
@@ -280,7 +280,10 @@ HypothesisTest(data,hypInput)</code></pre>
 <p>If you want to replicate all experiments then start from step 1) and do not ignore comments about data-pointer as the subsequent analysis and illustration generation has to point to the newly generated data.</p>
 <div id="requirements-2" class="section level3">
 <h3>Requirements</h3>
-<p>To run all our experiments and analysis script run the following code chunk to install the R-package dependencies that are needed.</p>
+<p>To run all our experiments and analysis scripts you need to have both Python3 (only needed for hypothesis testing exp.) and R installed.</p>
+<p>Python3 needs to have the access to networkx library. Run the following command in your terminal</p>
+<pre class="bash"><code>pip install networkx</code></pre>
+<p>Furthermore, run the following code chunk to install the R-package dependencies that are needed.</p>
 <pre class="r"><code>install.packages(&quot;pacman&quot;)
 pacman::p_load(tidyverse,facetscales,stringr,ggpubr,igraph,gridExtra,DescTools,IndepTest,mgcv,furrr,RBGL,pcalg,SID,Matrix,readxl,xtable,latex2exp,glmnet,mboost,kableExtra,Rcpp,devtools)
 install_url(&#39;https://cran.r-project.org/src/contrib/Archive/CAM/CAM_1.0.tar.gz&#39;)
@@ -289,7 +292,7 @@ devtools::install_github(&#39;rlebron-bioinfo/gnlearn&#39;)</code></pre>
 </div>
 <div id="data-generation" class="section level3">
 <h3>1) Data generation</h3>
-<p>To generate the experiment data: Run Script.R or manually run the following scripts.</p>
+<p>To generate the experiment data: run the following scripts.</p>
 <ol style="list-style-type: decimal">
 <li><strong>CAMvsTree_GP_Gaussian.R</strong>
 <ul>
