@@ -174,20 +174,20 @@ CAT <- function(dat,noise="G",workers=1,numbasisfnct = NULL, pvalCutoff = 1, cro
   return(reslist)
 }
 
-HypothesisTest <- function(dat,hypInput,level,queryscheme,numbasisfnct = NULL){
+HypothesisTest <- function(data,hypInput,level=0.05,queryscheme="asymptotic",numbasisfnct = NULL){
   alpha <- level
-  colNames <- names(dat)
-  names(dat) <- paste0("X",seq(1,ncol(dat),1)) 
+  colNames <- names(data)
+  names(data) <- paste0("X",seq(1,ncol(data),1)) 
   
   #translating hypothesis to new names
-  translation <- data.frame(original = as.character(colNames),new=seq(1,ncol(dat),1))
+  translation <- data.frame(original = as.character(colNames),new=seq(1,ncol(data),1))
   hypInput <- hypInput %>% mutate(from=as.character(from),to=as.character(to)) %>% 
     rowwise() %>% mutate(from = translation[which(translation[,1]==from),2],
                          to = translation[which(translation[,1]==to),2])
 
-  p <- ncol(dat)
-  Data1 <- dat[1:floor(nrow(dat)/2),]
-  Data2 <- dat[(floor((nrow(dat)/2)+1)):nrow(dat),]
+  p <- ncol(data)
+  Data1 <- data[1:floor(nrow(data)/2),]
+  Data2 <- data[(floor((nrow(data)/2)+1)):nrow(data),]
   n <- nrow(Data1)
   quantile = qnorm(alpha/(2*(p*(p-1))),
                    mean=0,

@@ -167,43 +167,126 @@ pre code {
 </div>
 
 
-<div id="structure-learning-for-directed-trees" class="section level1">
-<h1>Structure Learning for Directed Trees</h1>
-<p>Repository for simulations and illustrations for “Structure Learning for Directed Trees” @ <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a>.</p>
+<div id="structure-learning-for-directed-trees" class="section level1 tabset">
+<h1 class="tabset">Structure Learning for Directed Trees</h1>
+<p>Repository for implementations, simulations and illustrations for “Structure Learning for Directed Trees” @ <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a>.</p>
 <div id="implementation-of-cat" class="section level2">
 <h2>Implementation of CAT</h2>
-<p>An implementation of CA procedure is found in the Rscript “CAT.R”.</p>
+<p>The function <code>CAT</code> estimates a minimum edge weight directed tree using either a Gaussian or Entropy score function. See the paper <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a> for further details.</p>
 <div id="requirements" class="section level3">
 <h3>Requirements</h3>
+<p>To run the CAT implementation the following R-package dependencies are needed: <code>tidyverse</code> <code>magrittr</code> <code>mgcv</code> <code>furrr</code> <code>Matrix</code> <code>RBGL</code>.<br />
+In your R-session run the following code chunk to setup and initialize the CAT implementation:</p>
+<pre class="r"><code>install.packages(&quot;pacman&quot;)
+pacman::p_load(tidyverse,magrittr,mgcv,furrr,Matrix,RBGL,devtools)
+source_url(&quot;https://https://raw.githubusercontent.com/MartinEmilJakobsen/CAT/main/CAT.R&quot;)</code></pre>
 </div>
 <div id="usage" class="section level3">
 <h3>Usage</h3>
 <blockquote>
 <p><code>CAT(data, opt.args)</code></p>
 </blockquote>
-<div id="arguments" class="section level4">
-<h4>Arguments</h4>
+<div id="arguments" class="section level5">
+<h5>Arguments</h5>
 <ul>
-<li>data: a data.frame object with row-wise observations and columns representing system variables.</li>
-<li>noise:</li>
-<li>workers:</li>
-<li>numbasisfnct</li>
-<li>pvalCutoff</li>
-<li>crossfit</li>
+<li><code>data</code>: a data.frame object with row-wise observations and columns representing system variables.</li>
+<li><code>noise</code>: takes values “G” for Gaussian score and “NA” for entropy score. Default is “G”.</li>
+<li><code>workers</code>: number of threads to run the conditional expectation fitting on. Default is 1.</li>
+<li><code>numbasisfnct</code>: number of basis functions for spline regression. Default is NULL which uses default values from the mgcv-package.</li>
+<li><code>pvalCutoff</code>: a pruning pval cutoff threshold (between zero and 1). Detault is 1, which means no pruining.</li>
+<li><code>crossfit</code>: TRUE or FALSE. Specifies wheteher edge weights are to be crossfitted or not. Default is FALSE for no crossfitting.</li>
 </ul>
-<p>The CAT estimate is computed by running:</p>
-<p>CAT(data,noise,workers,numbasisfnct = NULL)</p>
-<p>where data is the datamatrix (rowwise observations, columnwise nodes), noise =“G” uses the Gaussian score and noise =“NA” uses the entropy score, workers sets the number of threads to run the CAT method on, and numbasisfnct sets the number of basisfunctions for the GAM spline estimation of the conditional means.</p>
 </div>
 </div>
 </div>
-<div id="implementation-of-hypothesis-testing-procedure" class="section level2">
-<h2>Implementation of hypothesis testing procedure</h2>
+<div id="implementation-of-testing-procedure" class="section level2">
+<h2>Implementation of Testing Procedure</h2>
+<p>The function <code>HypothesisTest</code> allows the user to test hypotheses about whether the underlying causal directed tree contains certain substructure restrictions. See the paper <a href="https://arxiv.org/abs/2108.08871" class="uri">https://arxiv.org/abs/2108.08871</a> for further details.</p>
+<div id="requirements-1" class="section level3">
+<h3>Requirements</h3>
+<p>To run our hypothesis testing procedure you need to have both Python3 and R installed.</p>
+<p>Python3 needs to have the access to networkx library. Run the following command in your terminal</p>
+<pre class="bash"><code>pip install networkx</code></pre>
+<p>To run our implementation the following R-package dependencies are needed: <code>tidyverse</code> <code>magrittr</code> <code>mgcv</code> <code>furrr</code> <code>Matrix</code> <code>RBGL</code>.<br />
+In your R-session run the following code chunk to setup and initialize and initialize the hypothesis testing implementation:</p>
+<pre class="r"><code>install.packages(&quot;pacman&quot;)
+pacman::p_load(tidyverse,magrittr,mgcv,furrr,Matrix,devtools)
+source_url(&quot;https://https://raw.githubusercontent.com/MartinEmilJakobsen/CAT/main/CAT.R&quot;)</code></pre>
 </div>
-<div id="how-to-replicate-experiments-in-paper" class="section level2">
-<h2>How to replicate experiments in paper</h2>
+<div id="usage-1" class="section level3">
+<h3>Usage</h3>
+<blockquote>
+<p><code>HypothesisTest(data, hypInput, opt.args)</code></p>
+</blockquote>
+<div id="arguments-1" class="section level5">
+<h5>Arguments</h5>
+<ul>
+<li><code>data</code>: data.frame object with row-wise observations and columns representing system variables.</li>
+<li><code>hypInput</code>: data.frame object containing the substructure hypothesis to test. See format below.</li>
+<li><code>level</code>: sets sigfinicance level of the test. Default is 0.05</li>
+<li><code>queryscheme</code>: type of query scheme method. Takes values “asymptotic” or “exact”. Default is “asymptotic”.</li>
+<li><code>numbasisfnct</code>: number of basis functions for spline regression. Default is NULL which uses default values from the mgcv-package.</li>
+</ul>
+</div>
+<div id="value" class="section level5">
+<h5>Value</h5>
+<p>0/1 output. 1 implies that the null-hypothesis is rejected.</p>
+</div>
+</div>
+<div id="example" class="section level3">
+<h3>Example</h3>
+<p><code>hypInput</code> should be a data.frame object with three columns <code>hypInput  = data.frame(from=*,to=*,hyp=*)</code> which contains row-wise simple substructure restrictions. The collections of the simple hypotheses is then tested as a combined substructure hypothesis.</p>
+<p>There is three types of simple hypotheses:</p>
+<ul>
+<li>Present edge hypothesis: hypothesis that the edge from V1 to V2 is present in the causal graph.
+<ul>
+<li>Format: <code>from=c(&quot;V1&quot;),to=c(&quot;V2&quot;),hyp=c(&quot;1&quot;)</code></li>
+</ul></li>
+<li>Missing edge hypothesis: hypothesis that the edge from V3 to V5 is not present in the causal graph.
+<ul>
+<li>Format: <code>from=c(&quot;V3&quot;),to=c(&quot;V5&quot;),hyp=c(&quot;-1&quot;)</code></li>
+</ul></li>
+<li>Root node hypothesis: Hypothesis that a node V1 is a root node in the causal graph.
+<ul>
+<li>Format: <code>from=c(&quot;V1&quot;),to=c(&quot;V1&quot;),hyp=c(&quot;r&quot;)</code></li>
+</ul></li>
+</ul>
+<p>Suppose, for example, that we have observational data of a 6 dimensional system</p>
+<pre class="r"><code>&gt; data
+# A tibble: 500 x 6
+       V1     V2    V3     V4    V5     V6
+    &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+ 1 -1.06  -0.729 0.381 -0.682 0.452  0.470
+ 2 -0.880 -0.646 0.617 -0.560 0.404 -0.392
+ 3  0.567 -1.96  0.481 -0.513 0.653  0.578
+ 4  2.25  -0.917 0.394 -0.524 0.951  0.339
+ 5 -0.561 -1.84  0.306 -0.775 0.336  0.575
+ 6  0.170 -1.72  0.474 -0.680 0.803  0.163
+ 7  1.38  -0.873 0.628 -0.707 0.638 -0.324
+ 8 -0.115 -1.61  0.606 -0.403 0.722  0.440
+ 9  1.40  -0.764 0.331 -0.923 0.354  1.08 
+10  1.55  -1.20  0.533 -0.824 0.500  0.252
+# ... with 490 more rows</code></pre>
+<p>We can test the substructure hypothesis that the causal graph satisfies all of the above simple substructure restrictions by combining them in a single <code>hypInput</code> and running the <code>HypothesisTest</code> function:</p>
+<pre class="r"><code>hypInput = data.frame(from = c(&quot;V1&quot;,&quot;V3&quot;,&quot;V1&quot;),
+                      to   = c(&quot;V2&quot;,&quot;V5&quot;,&quot;V1&quot;),
+                      hyp  = c(&quot;1&quot;,&quot;-1&quot;,&quot;r&quot;))
+HypothesisTest(data,hypInput)</code></pre>
+</div>
+</div>
+<div id="replicate-experiments-in-paper" class="section level2">
+<h2>Replicate Experiments in Paper</h2>
 <p>This repository also contains all R scripts for conducting the experiments referenced in the paper. In /Data the experiment data used in the paper is present. Thus, to simply rerun analysis and illustration generation on this data start from step 2) below and ignore comments about data-pointers.</p>
 <p>If you want to replicate all experiments then start from step 1) and do not ignore comments about data-pointer as the subsequent analysis and illustration generation has to point to the newly generated data.</p>
+<div id="requirements-2" class="section level3">
+<h3>Requirements</h3>
+<p>To run all our experiments and analysis script run the following code chunk to install the R-package dependencies that are needed.</p>
+<pre class="r"><code>install.packages(&quot;pacman&quot;)
+pacman::p_load(tidyverse,facetscales,stringr,ggpubr,igraph,gridExtra,DescTools,IndepTest,mgcv,furrr,RBGL,pcalg,SID,Matrix,readxl,xtable,latex2exp,glmnet,mboost,kableExtra,Rcpp,devtools)
+install_url(&#39;https://cran.r-project.org/src/contrib/Archive/CAM/CAM_1.0.tar.gz&#39;)
+install.packages(&quot;https://www.bnlearn.com/releases/bnlearn_latest.tar.gz&quot;, repos = NULL, type = &quot;source&quot;)
+devtools::install_github(&#39;rlebron-bioinfo/gnlearn&#39;)</code></pre>
+</div>
 <div id="data-generation" class="section level3">
 <h3>1) Data generation</h3>
 <p>To generate the experiment data: Run Script.R or manually run the following scripts.</p>
@@ -215,6 +298,11 @@ pre code {
 <li><strong>CAMvsTree_GP_Gaussian_CamScores.R</strong>
 <ul>
 <li><em>This script runs the Gaussian Process Gaussian Noise Experiment but CAT uses the CAM scores</em></li>
+</ul></li>
+<li><strong>CAMvsTree_GP_Gaussian_Crossfit.R</strong>
+<ul>
+<li><em>This script runs the Gaussian Process Gaussian Noise Experiment with the additional method of CAT.G with cross-fitted edge weights</em><br />
+</li>
 </ul></li>
 <li><strong>CAMvsTree_GP_NonGaussian.R</strong>
 <ul>
@@ -228,6 +316,10 @@ pre code {
 <ul>
 <li><em>This scripts runs the multivariate identifiability gap experiment</em></li>
 </ul></li>
+<li><strong>Testing_Multivariate.R</strong>
+<ul>
+<li><em>This scripts runs the multivariate hypothesis testing experiment</em></li>
+</ul></li>
 </ol>
 </div>
 <div id="section" class="section level3">
@@ -235,20 +327,24 @@ pre code {
 </div>
 <div id="data-analysis-and-generate-illustrations" class="section level3">
 <h3>2) Data Analysis and Generate Illustrations</h3>
-<p>All analysis and illustrations on experiment data reported in the paper is generated by the following script</p>
+<p>All analysis and illustrations on experiment data, excluding hypothesis testing data, reported in the paper is generated by the following script</p>
 <ol style="list-style-type: decimal">
 <li><strong>AnalysisOfData.R</strong></li>
 </ol>
+<p>All analysis and illustrations on hypothesis testing experiment data reported in the paper is generated by the following script</p>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>AnalysisOfData_Testing.R</strong></li>
+</ol>
 <p>Illustrations of the Gaussian process samplepaths are generated by the script</p>
-<ol style="list-style-type: decimal">
+<ol start="3" style="list-style-type: decimal">
 <li><strong>SamplePathIllustrations.R</strong></li>
 </ol>
 <p>Note that data-pointers in these scripts have to be adjusted to if used on new experiment data.</p>
 </div>
-</div>
-<div id="version-control" class="section level2">
-<h2>Version control</h2>
+<div id="version-control" class="section level3">
+<h3>Version control</h3>
 <p>The folder CAM_1.0 contains the R-package CAM used.</p>
+</div>
 </div>
 </div>
 
