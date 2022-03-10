@@ -26,7 +26,6 @@ library(viridis)
 
 source("Functions.R")
 
-
 ############################
 # Identifiability Constant #
 ############################
@@ -218,7 +217,9 @@ shd_type1 <- DATA_res %>% select(Type,p,SampleSize,rep,shd_tree,shd_cam) %>%
   ylab("")+
   xlab("")+
   facet_wrap(Type ~p, scales = "free",labeller = label_both,ncol=4)+ 
-  theme(legend.position="right")
+  theme(legend.position="right")+ 
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "MMHC.BGe"), values=c(
+"#f8766d", "#00bfc4", "#d3f86d"))
 
 shd_type2 <- DATA_res %>% select(Type,p,SampleSize,rep,shd_tree,shd_cam) %>% 
   filter(Type ==2) %>% 
@@ -360,6 +361,72 @@ ggsave(
 )
 
 
+
+#### Crossfit check #####
+
+
+Data <- readRDS(file="Data/Data_CAMvsTree_GP_Gaussian_Crossfit_2203092334.RDS")  %>%  unnest(cols="res")
+
+
+Nlevel <- Data %>% select(N) %>% unique() %>% arrange(N) %>%  pull(N) %>% paste()
+typelevel <- Data %>% select(type) %>% unique() %>% arrange(type) %>%  pull(type) %>% paste()
+DATA_res <- Data %>% 
+  mutate(shd_diff = shd_tree-shd_cam,
+         sid_diff = sid_tree-sid_cam,
+         SampleSize= factor(N,levels = Nlevel),
+         Type= factor(type,levels = typelevel))
+
+#SHD FOR EACH METHOD
+shd_type1 <- DATA_res %>% select(Type,p,SampleSize,rep,shd_tree,shd_cam,shd_tree.cf) %>% 
+  filter(Type ==1) %>% 
+  rename(CAT.G=shd_tree, CAT.G.cf = shd_tree.cf, CAM=shd_cam) %>% 
+  gather(Method,value,c(CAT.G,CAM,CAT.G.cf)) %>% 
+  ggplot(data=.,aes(x=SampleSize,y=value,fill=Method))+
+  geom_boxplot(outlier.shape=23,
+               outlier.size=1)+ 
+  ylab("")+
+  xlab("")+
+  facet_wrap(Type ~p, scales = "free",labeller = label_both,ncol=4)+ 
+  theme(legend.position="right")+ 
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "CAT.G.cf"), values=c(
+    "#f8766d", "#00bfc4", "#1645E8"))
+
+# shd_type2 <-  DATA_res %>% select(Type,p,SampleSize,rep,shd_tree,shd_cam,shd_tree.cf) %>% 
+#   filter(Type ==2) %>% 
+#   rename(CAT.G=shd_tree, CAT.G.cf = shd_tree.cf, CAM=shd_cam) %>% 
+#   gather(Method,value,c(CAT.G,CAM,CAT.G.cf)) %>% 
+#   ggplot(data=.,aes(x=SampleSize,y=value,fill=Method))+
+#   geom_boxplot(outlier.shape=23,
+#                outlier.size=1) +
+#   ylab("")+
+#   xlab("")+
+#   facet_wrap(Type ~p, scales = "free",labeller = label_both,ncol=4)+ 
+#   theme(legend.position="right")+ 
+#   scale_fill_manual(breaks = c("CAM", "CAT.G", "CAT.G.cf"), values=c(
+#     "#f8766d", "#00bfc4", "#d3f86d"))
+
+
+Plot <- ggarrange(shd_type1, nrow=1, common.legend = TRUE, legend="right")
+
+Plot <- annotate_figure(Plot,
+                        bottom = text_grob("Sample Size", color = "black",vjust=-1),
+                        left = text_grob("SHD to true graph", color = "black",vjust=2, rot = 90)
+)
+
+
+ggsave(
+  "Plots/CAMvsTree_GP_Gaussian_SHD_Type1and2_crossfit.pdf",
+  plot = Plot,
+  device = "pdf",
+  path = NULL,
+  scale = 1,
+  width = 210,
+  height = 70,
+  units = c("mm"),
+  dpi = 500,
+  limitsize = TRUE
+)
+
 ########################
 #### GP NonGaussian ####
 ########################
@@ -445,8 +512,8 @@ ggsave(
 ####   TIMINGS    ####
 ######################
 
-#Small sample timings SingleRootedDags:
-Data <- readRDS(file="Data/Data_CAMvsTree_GP_Gaussian_SingleRootedDags_2105181606.RDS")  %>%  unnest(cols="res") 
+Data <- readRDS(file="Data/Data_CAMvsTree_GP_Gaussian_SingleRootedDags_2203010909.RDS")  %>%  unnest(cols="res") 
+
 
 Data %>% 
   select(type,p,N,rep,Method,EstimationTime) %>% 
@@ -456,7 +523,8 @@ Data %>%
 Data %>% 
   select(type,p,N,rep,Method,EstimationTime) %>% 
   group_by(type,p,N,Method) %>% 
-  summarise(meantime= mean(EstimationTime))
+  summarise(meantime= mean(EstimationTime)) %>% 
+  print(n=200)
 
 ######################
 #### 3 Node setup ####
@@ -514,8 +582,7 @@ ggsave(
 ############################
 
 #Read Data
-Data <- readRDS(file="Data/Data_CAMvsTree_GP_Gaussian_SingleRootedDags_2105102144.RDS")  %>%  unnest(cols="res") 
-
+Data <- readRDS(file="Data/Data_CAMvsTree_GP_Gaussian_SingleRootedDags_2203010909.RDS")  %>%  unnest(cols="res") 
 
 Data <- left_join(Data %>% 
                     filter(Method != "True"),
@@ -525,10 +592,6 @@ Data <- left_join(Data %>%
                     select(-Method,-EstimationTime),
                   by=c("type","p","N","rep"))
 
-  
-
-
-
 AnalyzeDataFixedp <- function(Data,k){
   
   Res <- Data %>% 
@@ -537,12 +600,12 @@ AnalyzeDataFixedp <- function(Data,k){
       SHD = pmap_dbl(.l=list(AdjecencyMatrix,TrueAdjMat),.f=function(x,y){
         EstGraph = as(x %>% as.matrix(), "graphNEL")
         TrueGraph = as(y %>% as.matrix(),"graphNEL")
-        shd(EstGraph,TrueGraph)
+        pcalg::shd(EstGraph,TrueGraph)
       }),
       SID = pmap_dbl(.l=list(AdjecencyMatrix,TrueAdjMat),.f=function(x,y){
         EstGraph = as(x, "graphNEL")
         TrueGraph = as(y, "graphNEL")
-        structIntervDist(EstGraph,TrueGraph)$sid
+        structIntervDist(TrueGraph,EstGraph)$sid
       }),
       CorrectPredEdges = pmap_dbl(.l=list(AdjacencyData,TrueAdjDat),.f=function(x,y){
         CorrectEdges <- inner_join(x,y,by=c("parent","node"))
@@ -622,6 +685,7 @@ Res <- Data %>%
   mutate(p = factor(p,level=plevel),
          N = factor(N,level=Nlevel)) %>% 
   filter(Method != "CAM.VarSel")
+         
 
 Res <- Res %>% 
   mutate(Method = ifelse(Method == "CAM.PruneVarSel","CAM",Method))
@@ -633,7 +697,9 @@ SHD <- Res %>%
   geom_boxplot(outlier.shape=23,
                outlier.size=1) +
   facet_wrap(~p, ncol=3,scales="free_y",labeller="label_both")+
-  xlab("Sample Size")
+  xlab("Sample Size")+
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "MMHC.BGe"), values=c(
+    "#f8766d", "#00bfc4", "#62df6a"))
 
 ggsave(
   "Plots/CAMvsTree_Singlerooted_SHD.pdf",
@@ -667,9 +733,11 @@ EDGE1 <- Res %>%
                 outlier.size=1) +
   facet_wrap(~p, ncol=3,labeller="label_both")+
   xlab("")+
-  ylab(expression("Edges: True positive rate"))+
+  ylab(expression("Edge Classification: Precision"))+
   theme(plot.margin = unit(c(0,0,0,5), "mm"),
-        axis.title.y= element_text(hjust = 0.5))
+        axis.title.y= element_text(hjust = 0.5))+
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "MMHC.BGe"), values=c(
+    "#f8766d", "#00bfc4", "#62df6a"))
 
 #Correct Predicted edges Over Total True Edges -  Ed.CorrectPredOverTotalTrue
 
@@ -680,8 +748,10 @@ EDGE2 <- Res %>%
                outlier.size=1) +
   facet_wrap(~p, ncol=3,labeller="label_both")+
   xlab("Sample Size")+
-  ylab(expression('Correctly recovered edges \nover total causal edges'))+
-  theme(plot.margin = unit(c(0,0,0,5), "mm"))
+  ylab(expression('Edge Classification: Recall'))+
+  theme(plot.margin = unit(c(0,0,0,5), "mm"))+
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "MMHC.BGe"), values=c(
+    "#f8766d", "#00bfc4", "#62df6a"))
 
 
 Plot <- ggarrange(EDGE1, EDGE2, nrow=2, common.legend = TRUE, legend="right")
@@ -711,8 +781,10 @@ ANC1 <- Res %>%
                outlier.size=1) +
   facet_wrap(~p, ncol=3,labeller="label_both")+
   xlab("")+
-  ylab(expression("Ancestors: True positive rate"))+
-  theme(plot.margin = unit(c(0,0,0,5), "mm"))
+  ylab(expression("Ancestor Classification: Precision"))+
+  theme(plot.margin = unit(c(0,0,0,5), "mm"))+
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "MMHC.BGe"), values=c(
+    "#f8766d", "#00bfc4", "#62df6a"))
 
 # sum Correct Ancestors over sum of all true ancestors  -  Anc.CorrectPredOverTrue
 
@@ -723,8 +795,10 @@ ANC2 <- Res %>%
                outlier.size=1) +
   facet_wrap(~p, ncol=3,labeller="label_both")+
   xlab("Sample Size")+
-  ylab(expression('Correctly recovered ancestors \nover total causal ancestors'))+
-  theme(plot.margin = unit(c(0,0,0,5), "mm"))
+  ylab(expression('Ancestor Classification: Recall'))+
+  theme(plot.margin = unit(c(0,0,0,5), "mm"))+
+  scale_fill_manual(breaks = c("CAM", "CAT.G", "MMHC.BGe"), values=c(
+    "#f8766d", "#00bfc4", "#62df6a"))
 
 
 Plot <- ggarrange(ANC1, ANC2, nrow=2, common.legend = TRUE, legend="right")
@@ -741,4 +815,3 @@ ggsave(
   dpi = 500,
   limitsize = TRUE
 )
-

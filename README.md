@@ -1,15 +1,35 @@
-# Causal Structure Learning for Directed Trees
-Repository for simulations and illustrations for "Causal Structure Learning for Directed Trees" @ https://arxiv.org/abs/2108.08871. 
+# Structure Learning for Directed Trees
+Repository for simulations and illustrations for "Structure Learning for Directed Trees" @ https://arxiv.org/abs/2108.08871. 
 
 
 ## Implementation of CAT
-Implementation of CAT is found in "Functions.R". The CAT estimate is computed by running:
+An implementation of CA procedure is found in the Rscript "CAT.R".
 
-CAT(data, noise, workers, numbasisfnct = NULL)
+### Requirements
 
-where data is the datamatrix (rowwise observations, columnwise nodes), noise = "G" uses the Gaussian score and noise = "NA" uses the entropy score, workers sets the number of threads to run the CAT method on, and numbasisfnct sets the number of basisfunctions for the GAM spline estimation of the conditional means.
+### Usage
 
-## Replicate experiments
+> `CAT(data, opt.args)`
+
+#### Arguments
+* data: a data.frame object with row-wise observations and columns representing system variables.
+* noise: 
+* workers:
+* numbasisfnct
+* pvalCutoff
+* crossfit
+
+
+The CAT estimate is computed by running:
+
+CAT(data,noise,workers,numbasisfnct = NULL)
+
+where data is the datamatrix (rowwise observations, columnwise nodes), noise ="G" uses the Gaussian score and noise ="NA" uses the entropy score, workers sets the number of threads to run the CAT method on, and numbasisfnct sets the number of basisfunctions for the GAM spline estimation of the conditional means.
+
+## Implementation of hypothesis testing procedure
+
+
+## How to replicate experiments in paper
 
 This repository also contains all R scripts for conducting the experiments referenced in the paper. In /Data the experiment data used in the paper is present. Thus, to simply rerun analysis and illustration generation on this data start from step 2) below and ignore comments about data-pointers.
 

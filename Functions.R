@@ -47,9 +47,10 @@ Generate_tree_adjacency_dat <- function(Adjacency,p){
 }
 
 #Calculate ancestor lists from Adjacency Matrix
-Find_Ancestors <- function(Adjacency,p){
+Find_Ancestors <- function(Adjacency,p){ 
   expAdjMat <- {expm(Adjacency)} %>% as.matrix()
-  expAdjMat[lower.tri(expAdjMat,diag=TRUE)] <- 0
+  #expAdjMat[lower.tri(expAdjMat,diag=TRUE)] <- 0
+  expAdjMat[diag(p)==1] <- 0
   
   An <- list()
   for(i in 1:p){
@@ -286,3 +287,95 @@ CAT <- function(dat,noise,workers,numbasisfnct = NULL)
   
   return(reslist)
 }
+
+
+
+
+#### Hypothesis_Test Takes multiple simple hypothesis and test each single one, and returns a vector of TRUE/FALSE 
+HypothesisTest <- function(dat,hyp,alpha,numbasisfnct = NULL){
+  colNames <- names(dat)
+  names(dat) <- paste0("X",seq(1,ncol(dat),1)) 
+  p <- ncol(dat)
+  Data1 <- dat[1:floor(nrow(dat)/2),]
+  Data2 <- dat[(floor((nrow(dat)/2)+1)):nrow(dat),]
+  n <- nrow(Data1)
+  quantile = qnorm(alpha/(2*(p*(p-1))),
+                   mean=0,
+                   sd= 1,lower.tail = FALSE)
+  CI <- expand_grid(from=seq(1,p,1),to=seq(1,p,1)) %>%  
+    filter(from!= to) %>% 
+    rowwise() %>% 
+    mutate(M = list(pull((Data1[,to]-predict(gam(formula(paste0("X",to,"~","s(X",from,",bs='tp',k=ifelse(is.null(numbasisfnct),-1,numbasisfnct))")), data = Data2),
+                                             newdata=Data1[,paste0("X",from)]))^2)),
+           V = list(pull((Data1[,to]-mean(pull(Data1[,to])))^2))) %>% 
+    unnest(cols=c("M","V")) %>% 
+    ungroup() %>% 
+    group_by(from,to) %>% 
+    summarize(mu = mean(M),
+              Sigma_M = mean(M^2-mu^2),
+              nu = mean(V),
+              Sigma_V = mean(V^2-nu^2),
+              Sigma_MV = mean(M*V-mu*nu),
+              sigma = Sigma_M/mu^2 + Sigma_V/nu^2 - 2*Sigma_MV/(mu*nu),
+              lower = (1/2)*log(mu/nu) - quantile*sigma/(2*sqrt(n)),
+              upper = (1/2)*log(mu/nu) + quantile*sigma/(2*sqrt(n)),
+              edgeweight = (1/2)*log(mu/nu),
+              add = quantile*sigma/(2*sqrt(n)),
+              .groups = 'drop') %>% 
+    mutate(lowerPOS = lower + 2*abs(min(lower)),
+           upperPOS = upper + 2*abs(min(lower)))
+
+
+  LowerWeigthedAdjacency_Bonferroni <- matrix(rep(NA,p*p),ncol=p)
+  UpperWeigthedAdjacency_Bonferroni <- matrix(rep(NA,p*p),ncol=p)
+   
+  for(i in 1:p){
+    for (j in 1:p){
+      if (i != j){
+        LowerWeigthedAdjacency_Bonferroni[j,i] <- CI %>% 
+          filter(from == j,to == i) %>% 
+          select(lowerPOS) %>% 
+          pull()
+        UpperWeigthedAdjacency_Bonferroni[j,i] <- CI %>% 
+          filter(from == j,to == i) %>% 
+          select(upperPOS) %>% 
+          pull()
+      }
+      else {
+        LowerWeigthedAdjacency_Bonferroni[j,i] <- 0
+        UpperWeigthedAdjacency_Bonferroni[j,i] <- 0
+      }
+    }
+  }
+
+  LowerEdInput_Bonferroni <- paste(c(t(LowerWeigthedAdjacency_Bonferroni)), collapse = " ")
+  UpperEdInput_Bonferroni <- paste(c(t(UpperWeigthedAdjacency_Bonferroni)), collapse = " ")
+
+  HypInput <- paste(c(t(hyp)), collapse = " ")
+
+  PythonInput_Bonferroni = paste(p,LowerEdInput_Bonferroni,UpperEdInput_Bonferroni,HypInput)
+
+  Test_Exact_Bonferroni = system(paste('python3 PythonMultipleTests_ExactQuery.py',PythonInput_Bonferroni), intern = TRUE) %>%
+    strsplit(., split = " ") %>%
+    unlist() %>%
+    as.integer() %>%
+    as.vector()
+
+  Test_Asym_Bonferroni = system(paste('python3 PythonMultipleTests_AsymQuery.py',PythonInput_Bonferroni), intern = TRUE) %>% 
+    strsplit(., split = " ") %>% 
+    unlist() %>% 
+    as.integer() %>% 
+    as.vector()
+  
+
+  hyp <- hyp %>% 
+     mutate( Test_Exact_Bonferroni = Test_Exact_Bonferroni,
+             Test_Asym_Bonferroni = Test_Asym_Bonferroni
+           )
+  
+  return(hyp)
+}
+
+
+
+

@@ -18,6 +18,7 @@ library(SID)  # SID
 #install.packages("CAM_1.0.tar.gz", repos = NULL, type="source")
 library(CAM)
 library(Matrix)
+library(bnlearn)
 
 setwd("/home/lnd974/trees/Simulations")
 
@@ -55,17 +56,17 @@ est.CAT <- CAT(Data,noise="G",workers=1)
 end_time = Sys.time()
 CAT_Time <- difftime(end_time,start_time,units="secs") %>% as.numeric()
 
-start_time = Sys.time()
-est.CAM.VarSel <- CAM(X=Data %>% as.matrix(), scoreName = "SEMGAM", parsScore = list(numBasisFcts = 10), numCores = 1, 
-                     maxNumParents = p, output = FALSE, 
-                     variableSel = TRUE, variableSelMethod = selGamBoost, 
-                     variableSelMethodPars = list(atLeastThatMuchSelected = 0.02, 
-                                                  atMostThatManyNeighbors = 10), 
-                     pruning = FALSE, pruneMethod = selGam, 
-                     pruneMethodPars = list(cutOffPVal = 0.001, numBasisFcts = 10), intervData = FALSE, 
-                     intervMat = NA)
-end_time = Sys.time()
-CAM.VarSel_Time <- difftime(end_time,start_time,units="secs") %>% as.numeric()
+# start_time = Sys.time()
+# est.CAM.VarSel <- CAM(X=Data %>% as.matrix(), scoreName = "SEMGAM", parsScore = list(numBasisFcts = 10), numCores = 1, 
+#                      maxNumParents = p, output = FALSE, 
+#                      variableSel = TRUE, variableSelMethod = selGamBoost, 
+#                      variableSelMethodPars = list(atLeastThatMuchSelected = 0.02, 
+#                                                   atMostThatManyNeighbors = 10), 
+#                      pruning = FALSE, pruneMethod = selGam, 
+#                      pruneMethodPars = list(cutOffPVal = 0.001, numBasisFcts = 10), intervData = FALSE, 
+#                      intervMat = NA)
+# end_time = Sys.time()
+# CAM.VarSel_Time <- difftime(end_time,start_time,units="secs") %>% as.numeric()
 
 start_time = Sys.time()
 est.CAM.PruneVarSel <- CAM(X=Data %>% as.matrix(), scoreName = "SEMGAM", parsScore = list(numBasisFcts = 10), numCores = 1, 
@@ -80,12 +81,28 @@ end_time = Sys.time()
 CAM.PruneVarSel_Time <- difftime(end_time,start_time,units="secs") %>% as.numeric()
 
 
-Adj.Data <- tibble(Method = c("True","CAT.G","CAM.VarSel","CAM.PruneVarSel"),
-       EstimationTime = c(0,CAT_Time,CAM.VarSel_Time,CAM.PruneVarSel_Time),
+start_time = Sys.time()
+mmhcbge.fit <- bnlearn::mmhc(Data, whitelist = NULL, blacklist = NULL, restrict.args = list(),
+                             maximize.args = list(score="bge"), debug = FALSE)
+end_time = Sys.time()
+mmhcbge_Time <- difftime(end_time,start_time,units="secs") %>% as.numeric()
+
+mmhcbgeAdjMat <- est.CAM.PruneVarSel$Adj*matrix(rep(0,p*p),ncol=p)
+for (n in 1:nrow(mmhcbge.fit$arcs)){
+  mmhcbgeAdjMat[as.integer(substring(mmhcbge.fit$arcs[n,1],2)),as.integer(substring(mmhcbge.fit$arc[n,2],2))] <- 1
+}
+
+
+est.CAT$AdjMatrix %>% as(.,"matrix")
+Adj.Data <- tibble(Method = c("True","CAT.G",#"CAM.VarSel",
+                              "CAM.PruneVarSel", "MMHC.BGe"),
+       EstimationTime = c(0,CAT_Time,#CAM.VarSel_Time,
+                          CAM.PruneVarSel_Time,mmhcbge_Time),
        AdjecencyMatrix = list(Adjacency %>%  as.matrix(),
                   est.CAT$AdjMatrix %>% as.matrix(),
-                  est.CAM.VarSel$Adj %>% as.matrix(),
-                  est.CAM.PruneVarSel$Adj %>% as.matrix())) %>% 
+                  #est.CAM.VarSel$Adj %>% as.matrix(),
+                  est.CAM.PruneVarSel$Adj %>% as.matrix(),
+                  mmhcbgeAdjMat %>% as.matrix())) %>% 
   mutate(AdjacencyData = pmap(.l=list(AdjecencyMatrix),.f=function(AdjecencyMatrix){
     Generate_tree_adjacency_dat(AdjecencyMatrix,p)
   }))
@@ -100,7 +117,7 @@ seed = 1
 type <- c(1) #tree_gen_type
 p <- c(16,32,64)
 N <- c(50,250,500)
-repetitions <- 100
+repetitions <- 200
 
 
 sims <- expand_grid(type=type,p=p,N=N,rep=seq(1,repetitions,1))
@@ -108,7 +125,7 @@ rows <- sample(nrow(sims))
 sims <- sims[rows,]
 
 
-plan(multicore, workers = 60)
+plan(multicore, workers = 45)
 
 
 SummaryDat <- expand_grid(sims) %>% 
