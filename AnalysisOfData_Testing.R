@@ -11,8 +11,8 @@ SummaryDat <- readRDS(file="Data/Data_Testing_Multivariate_2201170534.RDS")
 #Plot 
 PlotData <- SummaryDat %>% 
   unnest(cols=c("Test")) %>% 
-  rename(Exact = Test_Bonferroni,Asymptotic = Test2_Bonferroni) %>% 
-  gather(c(Exact,Asymptotic),key='Query Scheme',value=Test) %>% 
+  rename(CheckC = Test_Bonferroni,ConvB = Test2_Bonferroni) %>% 
+  gather(c(CheckC,ConvB),key='Query Scheme',value=Test) %>% 
   mutate(Stat = ifelse( (IsEdgePresent == "TRUE" & Hyp == 1) | (IsEdgePresent == FALSE & Hyp == -1 ),"Level","Power")) %>% 
   filter(Stat == "Power") %>% 
   group_by(.,N,p,TreeType,IsEdgePresent,Hyp,Stat,`Query Scheme`) %>% 
