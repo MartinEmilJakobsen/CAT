@@ -12,11 +12,11 @@ SummaryDat <- readRDS(file="Data/Data_Testing_Multivariate_2201170534.RDS")
 PlotData <- SummaryDat %>% 
   unnest(cols=c("Test")) %>% 
   rename(CheckC = Test_Bonferroni,ConvB = Test2_Bonferroni) %>% 
-  gather(c(CheckC,ConvB),key='Query Scheme',value=Test) %>% 
+  gather(c(CheckC,ConvB),key='Test',value=Test_VAL) %>% 
   mutate(Stat = ifelse( (IsEdgePresent == "TRUE" & Hyp == 1) | (IsEdgePresent == FALSE & Hyp == -1 ),"Level","Power")) %>% 
   filter(Stat == "Power") %>% 
-  group_by(.,N,p,TreeType,IsEdgePresent,Hyp,Stat,`Query Scheme`) %>% 
-  summarise(Stat_Val = mean(Test)) %>% 
+  group_by(.,N,p,TreeType,IsEdgePresent,Hyp,Stat,`Test`) %>% 
+  summarise(Stat_Val = mean(Test_VAL)) %>% 
   mutate(col = paste(Stat,IsEdgePresent,sep="_")) %>% 
   ungroup %>% 
   select(-IsEdgePresent,-Stat,-Hyp) %>% 
@@ -26,7 +26,7 @@ PlotData <- SummaryDat %>%
 PlotData %>%  print(n=200)
 
 PowerPlot <- ggplot(data=PlotData)+
-  geom_line(aes(x=n,y=Stat_Val,group = interaction(p,`Query Scheme`), color = p,linetype=`Query Scheme`))+
+  geom_line(aes(x=n,y=Stat_Val,group = interaction(p,`Test`), color = p,linetype=`Test`))+
   ylab("Power")+
   facet_wrap(~col,scales = "free")+
   theme(
